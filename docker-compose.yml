@@ -24,7 +24,7 @@ x-base: &app_base
     # - "/projects/stats3_intake:/projects/stats3_intake"
 
 services:
-  specimen_dev:
+  service_dev:
     <<: *app_base
     container_name: "specimen_dev"
     environment:
@@ -58,7 +58,7 @@ services:
       - "traefik.http.routers.specimendev_jupyter.service=specimendev_jupyter"
       - "traefik.http.services.specimendev_jupyter.loadbalancer.server.port=8080"
 
-  specimen_prod:
+  service_prod:
     <<: *app_base
     container_name: "specimen_prod"
     environment:
