@@ -1,0 +1,1 @@
+python-api: cd frontend && npm ci && npm run build && cd .. && /root/.local/bin/uv run uvicorn api:app --host 0.0.0.0 --port 80

@@ -1,0 +1,92 @@
+x-base: &app_base
+  image: "specimen:latest"
+  build:
+    context: "."
+    dockerfile: "Dockerfile"
+  restart: "unless-stopped"
+  networks: ["web"]
+  command: [
+    "bash",
+    "-c",
+    "overmind start --root /workspace --socket /root/.overmind.sock --procfile Procfile.$$APP_ENV",
+  ]
+  # volumes:
+    # # to preserve configs
+    # - "./volume/root:/root"
+    # # actual work
+    # - "./volume/workspace:/workspace"
+    # # so that the deps are updated
+    # - "./image/pyproject.toml:/workdir/pyproject.toml"
+    # - "./image/poetry.lock:/workdir/poetry.lock"
+    # # model files
+    # - "/projects/shared_storage:/volume/shared_storage"
+    # # to upload stats
+    # - "/projects/stats3_intake:/projects/stats3_intake"
+
+services:
+  specimen_dev:
+    <<: *app_base
+    container_name: "specimen_dev"
+    environment:
+      - "APP_ENV=dev"
+    volumes:
+      - "./:/workspace"
+      - "/root/.claude:/root/.claude"
+      - "/root/.codex:/root/.codex"
+      - "/root/.gemini:/root/.gemini"
+    logging:
+      driver: syslog
+      options:
+        tag: "specimen_dev"
+        syslog-address: "tcp://172.17.0.1:5514"
+        syslog-format: "rfc5424"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+      # core app
+      - "traefik.http.routers.specimendev.rule=Host(`dev.specimen.abra.me`)"
+      - "traefik.http.routers.specimendev.entrypoints=websecure"
+      - "traefik.http.routers.specimendev.middlewares=forward_auth_verify" # Google OAuth
+      - "traefik.http.routers.specimendev.tls.certresolver=myresolver"
+      - "traefik.http.routers.specimendev.service=specimendev"
+      - "traefik.http.services.specimendev.loadbalancer.server.port=80"
+      # jupyter lab
+      - "traefik.http.routers.specimendev_jupyter.rule=Host(`python.dev.specimen.abra.me`)"
+      - "traefik.http.routers.specimendev_jupyter.entrypoints=websecure"
+      - "traefik.http.routers.specimendev_jupyter.middlewares=forward_auth_verify" # Google OAuth
+      - "traefik.http.routers.specimendev_jupyter.tls.certresolver=myresolver"
+      - "traefik.http.routers.specimendev_jupyter.service=specimendev_jupyter"
+      - "traefik.http.services.specimendev_jupyter.loadbalancer.server.port=8080"
+
+  specimen_prod:
+    <<: *app_base
+    container_name: "specimen_prod"
+    environment:
+      - "APP_ENV=prod"
+    logging:
+      driver: syslog
+      options:
+        tag: "specimen_prod"
+        syslog-address: "tcp://172.17.0.1:5514"
+        syslog-format: "rfc5424"
+    volumes:
+      - "specimen_db:/workspace/db.sqlite"
+    labels:
+      - "abra.alert_if_not_running=true"
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+      # core app
+      - "traefik.http.routers.specimen.rule=Host(`specimen.abra.me`)"
+      - "traefik.http.routers.specimen.entrypoints=websecure"
+      # - "traefik.http.routers.specimen.middlewares=forward_auth_verify" # Google OAuth
+      - "traefik.http.routers.specimen.tls.certresolver=myresolver"
+      - "traefik.http.routers.specimen.service=specimen"
+      - "traefik.http.services.specimen.loadbalancer.server.port=80"
+
+
+networks:
+  web:
+    external: true
+
+volumes:
+  specimen_db:

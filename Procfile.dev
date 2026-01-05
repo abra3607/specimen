@@ -1,0 +1,3 @@
+frontend: cd frontend && npm install && npm run dev -- --host 0.0.0.0 --port 80
+python-api: /root/.local/bin/uv run uvicorn api:app --host 0.0.0.0 --port 8000 --reload
+jupyter: /root/.local/bin/uv run jupyter lab --no-browser --allow-root --ip=0.0.0.0 --port=8080 --notebook-dir=/workspace --IdentityProvider.token= --ServerApp.password= --ServerApp.disable_check_xsrf=True
