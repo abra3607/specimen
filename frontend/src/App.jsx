@@ -18,7 +18,7 @@ function Home() {
   return (
     <div>
       <h1>Home</h1>
-      <p>Welcome to the app.</p>
+      <p>Welcome to the app!!!!!!!!!!!!!!!!</p>
       <p>API says: {loading ? 'Loading...' : message || 'Failed to load'}</p>
     </div>
   )
